@@ -242,6 +242,9 @@ def run(law, h_ref, h_dep):
                              F["gamma_boot"])[:, -1]
                 lo8, hi8, lo, hi = np.quantile(S, [0.1, 0.9, 0.05, 0.95])
                 lev[m].append({"unit": i, "origin": tk, "obs": float(obs),
+                               # readings are rounded, so the PIT is an interval
+                               "pit_lo": float(np.mean(S < obs - 1e-9)),
+                               "pit_hi": float(np.mean(S <= obs + 1e-9)),
                                "in80": bool(lo8 <= obs <= hi8),
                                "in90": bool(lo <= obs <= hi),
                                "w90": float(hi - lo),

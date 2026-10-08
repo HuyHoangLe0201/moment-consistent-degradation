@@ -176,7 +176,7 @@ if __name__ == "__main__":
     write("tab_lamperti.tex", t_lamperti())
     for name in ("table_singlerate", "table_realdata", "table_review",
                  "table_application", "table_bounds",
-                 "table_threshold"):
+                 "table_threshold", "fig_calibration"):
         try:
             runpy.run_path(os.path.join(HERE, name + ".py"), run_name="__main__")
         except FileNotFoundError as e:

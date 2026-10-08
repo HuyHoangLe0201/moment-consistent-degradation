@@ -161,6 +161,8 @@ def run(law, h_ref, h_dep):
                                "in80": bool(lo8 <= obs <= hi8),
                                "in90": bool(lo <= obs <= hi),
                                "w90": float(hi - lo), "crps": crps(end, obs),
+                               "pit_lo": float(np.mean(end < obs)),
+                               "pit_hi": float(np.mean(end <= obs)),
                                "is90": float(hi - lo + 20 * max(lo - obs, 0)
                                              + 20 * max(obs - hi, 0))})
         for D in THRESHOLDS:
