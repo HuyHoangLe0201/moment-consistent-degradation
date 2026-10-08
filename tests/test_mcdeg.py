@@ -133,3 +133,15 @@ def test_schedule_change_test_flags_interval_scaling():
     assert res["consistent"]["coverage"] > 0.75
     assert res["interval"]["coverage"] < res["consistent"]["coverage"]
     assert res["interval"]["width"] < res["consistent"]["width"]
+
+
+def test_bs_infeasible_step_raises():
+    """No BS step matches both moments when the squared CV reaches 5."""
+    with pytest.raises(ValueError):
+        M.consistent_params(M.BS, 1.0, 0.5, s=0.05)      # r = 0.5 / 0.05 = 10
+
+
+def test_predict_rul_simulates_when_steps_are_coarse():
+    mu, var = M.BS.moments(0.3, 0.2)                    # mu / x_ref = 0.2 > 0.1
+    p = M.predict_rul("BS", 0.0, 20.0, mu, var, gamma=1.0, x_ref=1.0, rng=1)
+    assert p.method == "simulation"

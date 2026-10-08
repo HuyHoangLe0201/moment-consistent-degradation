@@ -33,11 +33,12 @@ lines = [
     r"\begin{table}[htbp]", r"\centering\footnotesize",
     r"\caption{Application, leave one unit out, BS steps: records on one"
     r" schedule, monitoring on the other. Coverage (\%) of the level intervals,"
-    r" mean $90\,\%$ width, and the replacement rule: failures missed and mean"
-    r" warning.}",
+    r" with a $95\,\%$ interval for the $90\,\%$ coverage that resamples units"
+    r" (forecasts of one unit are dependent), mean $90\,\%$ width, and the"
+    r" replacement rule: failures missed and mean warning.}",
     r"\label{tab:application}",
     r"\begin{tabular}{@{}ll rrr rr@{}}", r"\toprule",
-    r"records $\to$ monitoring & model & $80\,\%$ & $90\,\%$ & width"
+    r"records $\to$ monitoring & model & $80\,\%$ & $90\,\%$ [$95\,\%$ CI] & width"
     r" & missed & warning\\"]
 for title, R, fmt_h, wfmt, ls, lfmt in SETS:
     lines += [r"\midrule", r"\multicolumn{7}{@{}l}{\emph{" + title + r"}}\\"]
@@ -51,7 +52,8 @@ for title, R, fmt_h, wfmt, ls, lfmt in SETS:
         for m in ("consistent", "interval"):
             s = r[m]
             head = f"${fmt_h(r['h_ref'])}\\to{fmt_h(r['h_dep'])}$" if m == "consistent" else ""
-            lines.append(f"{head} & {m} & {pc(s['cover80'])} & {pc(s['cover90'])}"
+            ci = f"[{pc(s['ci90'][0])},\\,{pc(s['ci90'][1])}]"
+            lines.append(f"{head} & {m} & {pc(s['cover80'])} & {pc(s['cover90'])} {ci}"
                          f" & {s['width90']:{wfmt}} & {s['missed']}/{s['n_events']}"
                          f" & {s['mean_lead'] * ls:{lfmt}}\\\\")
 lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]

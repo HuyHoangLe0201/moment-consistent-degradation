@@ -130,15 +130,22 @@ class RULPrediction:
 
 
 def predict_rul(family, x_k, D, mu, var, t_k=0.0, eta=0.05, dt=1.0, dt_ref=1.0,
-                gamma=0.0, x_ref=1.0, nd_min=10.0, n_paths=20000, rng=None):
+                gamma=0.0, x_ref=1.0, nd_min=10.0, max_scale_ratio=0.1,
+                n_paths=20000, rng=None):
     """Algorithm 1: the RUL law from state x_k at time t_k, and the replacement
-    time t_k + Q_eta(RUL).  Uses the closed-form IG approximation when at least
-    nd_min reference steps remain, and simulates the consistent process
-    otherwise."""
+    time t_k + Q_eta(RUL).
+
+    The closed-form IG approximation is used only when both validity conditions
+    of the paper hold: at least nd_min reference steps remain, and (under
+    coupling) the reference step is small against x_ref, mu / x_ref <=
+    max_scale_ratio.  Otherwise the consistent process is simulated.  For BS,
+    a step whose squared CV reaches 5 raises ValueError (no consistent BS step
+    exists on that grid)."""
     if x_k >= D:
         return RULPrediction(0.0, 0.0, 0.0, t_k, "failed", 0.0)
     m, lam, n_d = rul_ig_params(x_k, D, mu, var, gamma, x_ref, dt_ref)
-    if n_d >= nd_min:
+    small_steps = gamma == 0 or mu / x_ref <= max_scale_ratio
+    if n_d >= nd_min and small_steps:
         sd = np.sqrt(m ** 3 / lam)
         qe = float(ig_ppf(eta, m, lam))
         return RULPrediction(float(m), float(sd), qe, t_k + qe, "IG", float(n_d))

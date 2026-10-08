@@ -69,11 +69,11 @@ def _bs_shape_from_cv2(r, clip=True):
     """Closed-form root of g(alpha) = r (Theorem 1), written to avoid
     cancellation at small r.
 
-    For r >= 5 no BS pair matches both target moments (Remark 2).  With
-    clip=True the limiting admissible shape (r just below 5) is returned as a
-    numerical fallback, as Algorithm 1 does: from_moments() then keeps the
-    target mean but not the target variance, so that step is no longer
-    moment-consistent.  With clip=False, r >= 5 raises ValueError."""
+    For r >= 5 no BS pair matches both target moments.  With clip=False (as
+    used by from_moments) r >= 5 raises ValueError.  clip=True returns the
+    limiting shape (r just below 5); a step built from it keeps the target mean
+    but not the target variance, so it is NOT moment-consistent -- use it only
+    knowingly, e.g. for plotting."""
     r = _arr(r)
     if clip:
         r = np.minimum(r, BS_CV2_MAX * (1 - 1e-9))
@@ -91,7 +91,17 @@ def _bs_moments(alpha, beta):
 
 
 def _bs_from_moments(mean, var):
-    alpha = _bs_shape_from_cv2(_arr(var) / _arr(mean) ** 2)
+    """BS pair with the given mean and variance.  Raises ValueError when the
+    squared CV is 5 or more: no BS law has those moments (the grid is finer
+    than n_max).  Use a coarser reference interval or another family (Weibull,
+    gamma, IG), as Algorithm 1 of the paper does."""
+    r = _arr(var) / _arr(mean) ** 2
+    if np.any(r >= BS_CV2_MAX):
+        raise ValueError(
+            "BS infeasible: squared CV of the step >= 5, so no BS law has these "
+            "two moments (grid finer than n_max = 5 M^2 / V).  Use a coarser "
+            "reference interval, or the Weibull, gamma or IG family.")
+    alpha = _bs_shape_from_cv2(r, clip=False)
     return alpha, _arr(mean) / (1 + alpha ** 2 / 2)
 
 
