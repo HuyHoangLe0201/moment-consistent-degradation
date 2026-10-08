@@ -31,6 +31,7 @@ STEPS = [
     ("study_application", "lasers end to end", "Sec. 7.2, Table 6, Fig. 8"),
     ("study_application_deviceb", "Device-B end to end", "Sec. 7.2, Table 6, Fig. 8"),
     ("study_application_alloy", "Alloy-A end to end", "Sec. 7.2, Table 6, Fig. 8"),
+    ("study_brier", "Brier score of the event forecasts", "Sec. 7.2, Table D.7"),
     ("study_bounds", "explicit error bounds", "App. B, Table B.1"),
     ("study_sensitivity", "coupling-parameter sensitivity", "Sec. 5.3, Table D.6"),
 ]
