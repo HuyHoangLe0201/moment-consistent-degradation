@@ -37,6 +37,10 @@ PREAMBLE = r"""\documentclass[11pt]{article}
 \newcommand{\dd}{\mathrm{d}}
 \renewcommand{\E}{\mathbb{E}}
 \newcommand{\Var}{\mathrm{Var}}
+% cross-references of the paper, shown as their labels here
+\newcommand{\Cref}[1]{[#1]}
+\newcommand{\citep}[1]{[#1]}
+\renewcommand{\eqref}[1]{(#1)}
 \begin{document}
 """
 
