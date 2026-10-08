@@ -67,8 +67,13 @@ def _bs_g(alpha):
 
 def _bs_shape_from_cv2(r, clip=True):
     """Closed-form root of g(alpha) = r (Theorem 1), written to avoid
-    cancellation at small r.  With clip=True r is kept just below 5, the
-    finest-grid boundary, as Algorithm 1 does; otherwise r >= 5 raises."""
+    cancellation at small r.
+
+    For r >= 5 no BS pair matches both target moments (Remark 2).  With
+    clip=True the limiting admissible shape (r just below 5) is returned as a
+    numerical fallback, as Algorithm 1 does: from_moments() then keeps the
+    target mean but not the target variance, so that step is no longer
+    moment-consistent.  With clip=False, r >= 5 raises ValueError."""
     r = _arr(r)
     if clip:
         r = np.minimum(r, BS_CV2_MAX * (1 - 1e-9))
