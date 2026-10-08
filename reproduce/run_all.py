@@ -20,6 +20,7 @@ CODE = os.path.join(HERE, "code")
 # (script, what it produces, paper location)
 STEPS = [
     ("study_gridconsistency", "grid study", "Sec. 5.1, Fig. 5, Table D.1"),
+    ("study_irregular", "irregular schedules", "Sec. 5.1, Table D.8"),
     ("study_lamperti", "Lamperti reduction", "Sec. 5.3, Fig. 3, Table D.3"),
     ("study_igapprox", "IG approximation", "Sec. 5.3, Table D.4"),
     ("study_singlerate", "one-record identifiability", "Sec. 5.2, Table D.2"),
