@@ -19,7 +19,7 @@ Protocol (leave one specimen out, 21 folds)
            m_i comes from its own readings, with the uncertainty that the
            model itself implies carried into every path.
   check    (a) the 90 % interval for the crack length 0.04 Mcycles ahead;
-           (b) the replacement rule of Section 7.1 at thresholds 1.3 ... 1.6 in.
+           (b) the replacement rule of Section 8 at thresholds 1.3 ... 1.6 in.
 
 Records every 0.02 Mcycles and monitoring every 0.01, and the reverse.  The
 specimens are short (at most 12 readings), so a factor of two is the largest
@@ -59,6 +59,11 @@ RES = 0.01                                         # readings rounded to 0.01 in
 SIG2_E = RES ** 2 / 12                             # uniform rounding error
 ROUND = int(os.environ.get("APP_ROUND", "1"))      # 1: Sheppard (main), 2: free error
 PARAM_UNC = os.environ.get("APP_PARAM", "1") == "1"
+#  1 (main): every path draws its own gamma from a bootstrap over the training
+#  specimens, so the uncertainty of the coupling exponent enters every
+#  prediction; 0: the point estimate, as in the first version of the paper
+GAMMA_UNC = os.environ.get("APP_GAMMA_UNC", "1") == "1"
+NB_GAMMA = 1000
 NBOOT = 4000
 
 
@@ -147,7 +152,15 @@ def fit(P, h_ref):
     dm = lambda v: v - np.array([v[u == k].mean() for k in u])
     gamma = float(np.sum(dm(lq) * dm(ly)) / np.sum(dm(lq) ** 2))
     s = np.exp(gamma * lq)                          # q^gamma; h = h_ref here
-    out = {"gamma": gamma}
+    # the same estimator on specimens resampled with replacement: per-unit
+    # sums of the demeaned cross products and squares are what it adds up
+    dlq, dly = dm(lq), dm(ly)
+    units = np.unique(u)
+    sxy = np.array([np.sum(dlq[u == k] * dly[u == k]) for k in units])
+    sxx = np.array([np.sum(dlq[u == k] ** 2) for k in units])
+    pick = RNG.integers(0, len(units), (NB_GAMMA, len(units)))
+    out = {"gamma": gamma,
+           "gamma_boot": sxy[pick].sum(1) / sxx[pick].sum(1)}
     for model in MODELS:
         sig2 = meas_var(P, h_ref, gamma, model)
         out[model + "_sig2"] = sig2
@@ -167,20 +180,24 @@ def fit(P, h_ref):
 
 
 def simulate(law, model, x0, tt_hist, xx_hist, h, h_ref, gamma, cv2_ref, n,
-             df=None, sig2=0.0):
+             df=None, sig2=0.0, gamma_boot=None):
     """Observed readings for n steps after the last reading of a unit.
 
     Carried uncertainties: the unit's level m_i (variance implied by the model,
     plus the rounding of the two end readings), cv2_ref (scaled inverse
-    chi-square on df), the true current length (reading minus a uniform
+    chi-square on df), the coupling exponent gamma (one bootstrap draw per
+    path, when GAMMA_UNC), the true current length (reading minus a uniform
     rounding error) and the rounding of the future reading."""
     if df is not None and PARAM_UNC:
         cv2_ref = cv2_ref * df / RNG.chisquare(df, NSIM)
-    s_hist = (np.diff(tt_hist) / h_ref) * q(xx_hist[:-1]) ** gamma
+    if gamma_boot is not None and GAMMA_UNC:
+        gamma = RNG.choice(gamma_boot, NSIM)
+    g = np.atleast_1d(gamma)[:, None]                 # one exponent per path
+    s_hist = (np.diff(tt_hist) / h_ref)[None, :] * q(xx_hist[:-1])[None, :] ** g
     y_hist = np.diff(xx_hist)
-    m = y_hist.sum() / s_hist.sum()
-    cv2h = cv2_of(model, np.atleast_1d(cv2_ref)[:, None], s_hist[None, :])
-    rel2 = (np.sum(s_hist ** 2 * cv2h, axis=1) / s_hist.sum() ** 2
+    m = y_hist.sum() / s_hist.sum(1)
+    cv2h = cv2_of(model, np.atleast_1d(cv2_ref)[:, None], s_hist)
+    rel2 = (np.sum(s_hist ** 2 * cv2h, axis=1) / s_hist.sum(1) ** 2
             + 2 * sig2 / y_hist.sum() ** 2)
     sd = np.sqrt(rel2)
     mi = m * np.exp(sd * RNG.standard_normal(NSIM) - sd ** 2 / 2)
@@ -221,7 +238,8 @@ def run(law, h_ref, h_dep):
             obs = xx[k + nH]
             for m in MODELS:
                 S = simulate(law, m, xx[k], tt[:k + 1], xx[:k + 1], h_dep, h_ref,
-                             F["gamma"], F[m], nH, F["df"], F[m + "_sig2"])[:, -1]
+                             F["gamma"], F[m], nH, F["df"], F[m + "_sig2"],
+                             F["gamma_boot"])[:, -1]
                 lo8, hi8, lo, hi = np.quantile(S, [0.1, 0.9, 0.05, 0.95])
                 lev[m].append({"unit": i, "origin": tk, "obs": float(obs),
                                "in80": bool(lo8 <= obs <= hi8),
@@ -242,7 +260,8 @@ def run(law, h_ref, h_dep):
                     if tt[j] < 0.02 - 1e-9:
                         continue
                     S = simulate(law, m, xx[j], tt[:j + 1], xx[:j + 1], h_dep,
-                                 h_ref, F["gamma"], F[m], 1, F["df"], F[m + "_sig2"])
+                                 h_ref, F["gamma"], F[m], 1, F["df"], F[m + "_sig2"],
+                                 F["gamma_boot"])
                     if np.mean(S[:, 0] >= D - 1e-9) > ETA:
                         t_rep = float(tt[j])
                         break
@@ -250,6 +269,8 @@ def run(law, h_ref, h_dep):
                                "missed": bool(t_rep > T_obs)})
     res = {"law": law, "h_ref": h_ref, "h_dep": h_dep,
            "gamma_mean": float(np.mean([f["gamma"] for f in fits])),
+           "gamma_boot_sd": float(np.mean([np.std(f["gamma_boot"]) for f in fits])),
+           "gamma_unc": GAMMA_UNC,
            "sigma_meas": {m: float(np.sqrt(np.mean([f[m + "_sig2"] for f in fits])))
                           for m in MODELS},
            "cv2_ref_mean": {m: float(np.mean([f[m] for f in fits])) for m in MODELS},
