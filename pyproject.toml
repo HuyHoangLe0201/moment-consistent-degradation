@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcdeg"
+version = "1.0.0"
+description = "Moment-consistent degradation processes with non-additive (Birnbaum-Saunders, Weibull, ...) increments, and RUL prediction on any inspection schedule"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Huy Hoang Le"}, {name = "Kim-Anh Nguyen"}]
+keywords = ["degradation", "remaining useful life", "Birnbaum-Saunders",
+            "Weibull", "inspection interval", "prognostics", "reliability"]
+dependencies = ["numpy>=1.22", "scipy>=1.8"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+reproduce = ["pyreadr>=0.4", "pandas>=1.4", "matplotlib>=3.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

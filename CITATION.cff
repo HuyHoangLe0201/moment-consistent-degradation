@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "mcdeg: moment-consistent degradation processes with non-additive increments"
+version: 1.0.0
+license: MIT
+authors:
+  - family-names: Le
+    given-names: Huy Hoang
+    affiliation: "R&D Department, PowerMore Ltd., Da Nang, Vietnam"
+  - family-names: Nguyen
+    given-names: Kim-Anh
+    affiliation: "Faculty of Electrical Engineering, The University of Danang - University of Science and Technology, Da Nang, Vietnam"
+preferred-citation:
+  type: article
+  title: "Inspection-Schedule Consistency for Degradation Processes with Non-Additive Increments: Birnbaum-Saunders and Weibull Laws"
+  authors:
+    - family-names: Le
+      given-names: Huy Hoang
+    - family-names: Nguyen
+      given-names: Kim-Anh
+  status: submitted
+  year: 2026

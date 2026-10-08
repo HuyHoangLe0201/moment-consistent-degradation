@@ -1,0 +1,17 @@
+# third-party data: fetched by reproduce/fetch_data.py, never committed
+reproduce/data_external/
+# results that contain readings of the published data sets: recomputed
+reproduce/results/realdata/
+reproduce/results/tables/
+reproduce/results/figures/
+reproduce/figures/out/
+reproduce/figures/preview.*
+reproduce/run_all.log
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
