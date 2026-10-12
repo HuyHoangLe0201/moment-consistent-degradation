@@ -17,4 +17,4 @@ from .coupling import (q, psi, kappa, distances, rul_ig_params, ig_cdf, ig_ppf,
 from .diagnostics import fit_reference, variance_growth_exponent, thin
 from .validation import schedule_change_test
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
